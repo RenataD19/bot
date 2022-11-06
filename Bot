@@ -1,0 +1,73 @@
+import requests
+import telebot
+from bs4 import BeautifulSoup as BS
+from telebot import types
+
+BOT = '5650014132:AAF1hA4uCuLXTUxBgA9YoJlGRrDcTW9cpc0'
+
+URL = 'https://calend.online/holiday/'
+def parser(URL):
+    r = requests.get(URL)
+    soup = BS(r.text, 'html.parser')
+    prz = soup.find_all('ul', class_='holidays-list')
+    return [c.text for c in prz]
+
+list_of_prz = parser(URL)
+
+
+Url = 'https://calend.online/holiday/russia/'
+
+def parser(Url):
+    r = requests.get(Url)
+    soup = BS(r.text, 'html.parser')
+    przru = soup.find_all( class_='h3')
+    return [c.text for c in przru]
+
+list_of_przru = parser(Url)
+
+
+
+url = 'https://calend.online/holiday/week/'
+
+def parser(url):
+    r = requests.get(url)
+    soup = BS(r.text, 'html.parser')
+    przwe = soup.find_all(class_='h3')
+    return [c.text for c in przwe]
+
+list_of_przwe = parser(url)
+
+text1 = f' Список праздников на сегодня: {"".join(list_of_prz)} '
+
+text2 = f' Список праздников на неделю: {"".join(list_of_przwe)} '
+
+text3 = f' Список оффициальных праздников в России: {"".join(list_of_przru)} '
+
+
+
+bot = telebot.TeleBot(BOT)
+@bot.message_handler(commands=['start'])
+def start(message):
+   markup = types.ReplyKeyboardMarkup(resize_keyboard = True)
+   item1 = types.KeyboardButton('Праздники этого дня')
+   item2 = types.KeyboardButton('Праздники на этой неделе')
+   item3 = types.KeyboardButton('Праздник в России')
+
+   markup.add(item1, item2, item3)
+
+   bot.send_message(message.chat.id, 'Здравствуйте! Выберете интересующую вас информацию: ' .format(message.from_user), reply_markup = markup)
+
+
+@bot.message_handler(content_types=['text'])
+def bot_message(message):
+    if message.chat.type == 'private':
+        if message.text == 'Праздники этого дня':
+            bot.send_message(message.chat.id, text1)
+
+        elif message.text == 'Праздники на этой неделе':
+            bot.send_message(message.chat.id, text2)
+
+        elif message.text == 'Праздники в России':
+            bot.send_message(message.chat.id, text3 )
+
+bot.polling(none_stop=True)
